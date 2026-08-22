@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileSpreadsheet, Check, AlertCircle, Copy, HelpCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, Check, AlertCircle } from 'lucide-react';
 import { Student } from '../types';
 
 interface DataImportWidgetProps {
@@ -7,24 +7,10 @@ interface DataImportWidgetProps {
   existingCount: number;
 }
 
-const TEMPLATE_STUDENT: Omit<Student, 'id'> = {
-  name: "Rajesh Kumar",
-  email: "rajesh.kumar@university.edu",
-  major: "Data Science & AI",
-  courses: ["CS 101: Introduction to Computer Science", "MATH 290: Linear Algebra"],
-  studyStyle: "Problem Solving",
-  locationPreference: "Hybrid",
-  availability: ["Mon Morning", "Wed Afternoon", "Fri Evening"],
-  bio: "Passionate about machine learning and deep learning. Let's work on coding assignments together!",
-  isCurrentlyFree: true,
-  avatarSeed: "RK"
-};
-
 export default function DataImportWidget({ onImportStudents, existingCount }: DataImportWidgetProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successCount, setSuccessCount] = useState<number | null>(null);
-  const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -116,12 +102,6 @@ export default function DataImportWidget({ onImportStudents, existingCount }: Da
     fileInputRef.current?.click();
   };
 
-  const copyTemplate = () => {
-    navigator.clipboard.writeText(JSON.stringify([TEMPLATE_STUDENT], null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 space-y-6" id="data-import-container">
       <div className="border-b border-slate-100 pb-4" id="import-header">
@@ -179,42 +159,6 @@ export default function DataImportWidget({ onImportStudents, existingCount }: Da
           )}
         </div>
 
-        {/* Instructions & Template */}
-        <div className="lg:col-span-5 bg-slate-50 rounded-2xl p-5 border border-slate-100 flex flex-col justify-between" id="upload-info-panel">
-          <div className="space-y-3">
-            <span className="text-[10px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-              <HelpCircle className="w-3.5 h-3.5" />
-              JSON Data Format Instructions
-            </span>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              Your JSON file should contain either a single student object or an array of student objects matching our peer schema template.
-            </p>
-          </div>
-
-          <div className="mt-4" id="template-copy-section">
-            <div className="bg-white border border-slate-200 rounded-xl p-3 text-[10px] font-mono text-slate-600 overflow-x-auto max-h-36">
-              <pre>{JSON.stringify([TEMPLATE_STUDENT], null, 2)}</pre>
-            </div>
-            <button
-              type="button"
-              onClick={copyTemplate}
-              className="mt-2.5 w-full bg-slate-950 hover:bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-wider py-2 transition-colors flex items-center justify-center gap-2"
-              id="copy-template-btn"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  Copied Template!
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  Copy Schema Template
-                </>
-              )}
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
