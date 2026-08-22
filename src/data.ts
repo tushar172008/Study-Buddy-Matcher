@@ -1,5 +1,5 @@
-export const POPULAR_COURSES = [
-  "TIET — Undergraduate Programs",
+export const PROGRAM_GROUPS = {
+  "TIET — Thapar Institute of Engineering & Technology": [
   "B.E. Computer Engineering",
   "B.E. Computer Science & Engineering",
   "B.E. Computer Science & Business Systems",
@@ -27,12 +27,13 @@ export const POPULAR_COURSES = [
   "D.Sc.",
   "TIET — Dual Degree",
   "B.E. – MBA",
-  "TSLAS — Undergraduate Programs",
+  ],
+  "TSLAS — Thapar School of Liberal Arts & Sciences": [
+  "Bachelor of Arts (B.A.)",
   "Bachelor of Arts (B.A.)",
   "Bachelor of Science (B.Sc.)",
   "Bachelor of Business Administration (BBA)",
   "Bachelor of Commerce (B.Com)",
-  "TSLAS — Majors",
   "BBA",
   "B.Com",
   "Biotechnology",
@@ -53,19 +54,21 @@ export const POPULAR_COURSES = [
   "Sociology",
   "Geography & Resource Management",
   "Astrophysics & Space Science",
-  "TSLAS — Postgraduate Program",
   "M.A. Psychology",
   "Clinical Psychology",
   "Counseling Psychology",
   "Industrial & Organizational Psychology",
-  "TSLAS — Doctoral Program",
   "Ph.D. (TSLAS)",
-  "TPC — Diploma Programs",
+  ],
+  "TPC — Thapar Polytechnic College": [
   "Diploma in Computer Science & Engineering",
   "Diploma in Mechanical Engineering",
   "Diploma in Electrical Engineering",
   "Diploma in Civil Engineering",
   "Diploma in Architectural Assistantship",
   "3-Year Diploma Programs"
-];
+  ]
+} as const;
+
+export const POPULAR_COURSES = Object.values(PROGRAM_GROUPS).flat();
 

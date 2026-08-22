@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogIn, UserPlus, GraduationCap, Calendar, Clock, BookOpen, MapPin, User, Sparkles, CheckCircle } from 'lucide-react';
-import { POPULAR_COURSES } from '../data';
+import { PROGRAM_GROUPS } from '../data';
 import { Student, StudyStyle, LocationPref } from '../types';
 
 interface AuthScreenProps {
@@ -237,26 +237,33 @@ export default function AuthScreen({ onAuthSuccess, showToast }: AuthScreenProps
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-900">Enrolled Programs (Select all that apply)</label>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-100 rounded-2xl max-h-40 overflow-y-auto" id="auth-courses-box">
-                    {POPULAR_COURSES.map((course) => {
-                      const isSelected = selectedCourses.includes(course);
-                      return (
-                        <button
-                          key={course}
-                          type="button"
-                          onClick={() => toggleCourse(course)}
-                          className={`p-2 rounded-xl border text-left text-[10px] font-bold flex items-center justify-between transition-all ${
-                            isSelected
-                              ? 'bg-slate-950 text-white border-slate-950 shadow-sm'
-                              : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
-                          }`}
-                        >
-                          <span className="truncate pr-1">{course.split(':')[0]}</span>
-                          <span className="text-[9px] text-slate-400 truncate max-w-[100px] font-normal italic">
-                            {isSelected ? '✓ Added' : 'Enrolled'}
-                          </span>
-                        </button>
-                      );
-                    })}
+                    {Object.entries(PROGRAM_GROUPS).map(([group, programs]) => (
+                      <React.Fragment key={group}>
+                        <div className="sm:col-span-2 pt-2 text-[10px] font-black uppercase tracking-wider text-slate-950 border-b border-slate-200">
+                          {group}
+                        </div>
+                        {programs.map((program) => {
+                          const isSelected = selectedCourses.includes(program);
+                          return (
+                            <button
+                              key={program}
+                              type="button"
+                              onClick={() => toggleCourse(program)}
+                              className={`p-2 rounded-xl border text-left text-[10px] font-bold flex items-center justify-between transition-all ${
+                                isSelected
+                                  ? 'bg-slate-950 text-white border-slate-950 shadow-sm'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
+                              }`}
+                            >
+                              <span className="pr-1">{program}</span>
+                              <span className="text-[9px] text-slate-400 truncate max-w-[100px] font-normal italic">
+                                {isSelected ? '✓ Added' : 'Select'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </React.Fragment>
+                    ))}
                   </div>
                 </div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Student, StudyStyle, LocationPref } from '../types';
-import { POPULAR_COURSES } from '../data';
+import { PROGRAM_GROUPS } from '../data';
 import { User, Mail, GraduationCap, Clock, Award, BookOpen, AlertCircle } from 'lucide-react';
 
 interface ProfileFormProps {
@@ -175,29 +175,36 @@ export default function ProfileForm({ profile, onSaveProfile, message }: Profile
           Enrolled Programs (Select all that apply)
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2" id="course-chips-container">
-          {POPULAR_COURSES.map((course) => {
-            const isSelected = courses.includes(course);
-            return (
-              <button
-                type="button"
-                key={course}
-                id={`course-option-${course.split(':')[0].replace(/\s+/g, '-').toLowerCase()}`}
-                onClick={() => handleCourseToggle(course)}
-                className={`text-left text-[11px] p-3 rounded-xl border transition-all duration-150 flex items-center justify-between ${
-                  isSelected
-                    ? 'border-slate-950 bg-slate-50 text-slate-900 font-semibold'
-                    : 'border-slate-100 hover:border-slate-200 text-slate-600 bg-white'
-                }`}
-              >
-                <span>{course}</span>
-                <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[8px] ${
-                  isSelected ? 'bg-slate-950 border-slate-950 text-white' : 'border-slate-300 bg-white'
-                }`}>
-                  {isSelected && "✓"}
-                </span>
-              </button>
-            );
-          })}
+          {Object.entries(PROGRAM_GROUPS).map(([group, programs]) => (
+            <React.Fragment key={group}>
+              <div className="sm:col-span-2 pt-2 text-[10px] font-black uppercase tracking-wider text-slate-950 border-b border-slate-200">
+                {group}
+              </div>
+              {programs.map((program) => {
+                const isSelected = courses.includes(program);
+                return (
+                  <button
+                    type="button"
+                    key={program}
+                    id={`course-option-${program.replace(/\s+/g, '-').toLowerCase()}`}
+                    onClick={() => handleCourseToggle(program)}
+                    className={`text-left text-[11px] p-3 rounded-xl border transition-all duration-150 flex items-center justify-between ${
+                      isSelected
+                        ? 'border-slate-950 bg-slate-50 text-slate-900 font-semibold'
+                        : 'border-slate-100 hover:border-slate-200 text-slate-600 bg-white'
+                    }`}
+                  >
+                    <span>{program}</span>
+                    <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[8px] ${
+                      isSelected ? 'bg-slate-950 border-slate-950 text-white' : 'border-slate-300 bg-white'
+                    }`}>
+                      {isSelected && "✓"}
+                    </span>
+                  </button>
+                );
+              })}
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
