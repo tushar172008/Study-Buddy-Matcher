@@ -172,7 +172,7 @@ export default function ProfileForm({ profile, onSaveProfile, message }: Profile
       <div className="space-y-2" id="field-group-courses">
         <label className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
           <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-          Enrolled Courses (Select all that apply)
+          Enrolled Programs (Select all that apply)
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2" id="course-chips-container">
           {POPULAR_COURSES.map((course) => {

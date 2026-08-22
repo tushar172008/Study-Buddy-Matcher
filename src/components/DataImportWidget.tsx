@@ -60,7 +60,7 @@ export default function DataImportWidget({ onImportStudents, existingCount }: Da
             name: String(item.name),
             email: String(item.email),
             major: String(item.major),
-            courses: Array.isArray(item.courses) ? item.courses.map(String) : ["CS 101: Introduction to Computer Science"],
+            courses: Array.isArray(item.courses) ? item.courses.map(String) : ["B.E. Computer Science & Engineering"],
             studyStyle: ['Quiet Focus', 'Discussion-based', 'Active Recall', 'Problem Solving'].includes(item.studyStyle)
               ? item.studyStyle
               : 'Quiet Focus',

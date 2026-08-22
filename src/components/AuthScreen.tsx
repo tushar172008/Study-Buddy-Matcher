@@ -234,7 +234,7 @@ export default function AuthScreen({ onAuthSuccess, showToast }: AuthScreenProps
                 <div className="space-y-2">
                   <div className="flex items-center gap-1.5">
                     <BookOpen className="w-3.5 h-3.5 text-slate-900" />
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-900">Enrolled University Courses (Select exact matching courses)</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-900">Enrolled Programs (Select all that apply)</label>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-100 rounded-2xl max-h-40 overflow-y-auto" id="auth-courses-box">
                     {POPULAR_COURSES.map((course) => {
