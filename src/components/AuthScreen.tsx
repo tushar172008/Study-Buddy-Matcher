@@ -398,13 +398,6 @@ export default function AuthScreen({ onAuthSuccess, showToast }: AuthScreenProps
           </div>
         </form>
 
-        {/* Guest credentials hint to help reviewers test effortlessly */}
-        {!isSignUp && (
-          <div className="mt-6 p-3 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] text-slate-500 leading-relaxed text-center" id="auth-test-credentials">
-            <span className="font-bold text-slate-900 block mb-0.5">💡 Demo Accounts Available (Reviewer Shortcut)</span>
-            Use <strong className="font-bold text-slate-900">arjun.sharma@university.edu</strong> or signup a new account. Password is <strong className="font-bold text-slate-900">password123</strong>.
-          </div>
-        )}
       </motion.div>
     </div>
   );

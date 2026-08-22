@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Student, ChatSession, ScheduledSession, MatchResult, StudyPod, StudyStyle } from './types';
-import { MOCK_STUDENTS } from './data';
 import FeaturesRow from './components/FeaturesRow';
 import ProfileForm from './components/ProfileForm';
 import SwipeCard from './components/SwipeCard';
@@ -11,17 +10,17 @@ import StudyPodsPanel from './components/StudyPodsPanel';
 import AuthScreen from './components/AuthScreen';
 import DataImportWidget from './components/DataImportWidget';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, MessagesSquare, CalendarRange, UserCircle, Sparkles, AlertCircle, RefreshCw, Check, Users, LogOut } from 'lucide-react';
+import { BookOpen, MessagesSquare, CalendarRange, UserCircle, Sparkles, AlertCircle, Check, Users, LogOut } from 'lucide-react';
 
-const DEFAULT_PROFILE = {
-  name: "Arjun Sharma",
-  email: "arjun.sharma@university.edu",
-  major: "Computer Science",
-  courses: ["CS 101: Introduction to Computer Science", "MATH 290: Linear Algebra", "CHEM 210: Organic Chemistry II"],
+const EMPTY_PROFILE = {
+  name: "",
+  email: "",
+  major: "",
+  courses: [],
   studyStyle: "Quiet Focus" as const,
   locationPreference: "Hybrid" as const,
-  availability: ["Mon Morning", "Tue Evening", "Thu Afternoon", "Fri Morning"],
-  bio: "Hi! I am a second-year CS major. Working through linear algebra proofs and organic chemistry synthesis reaction mechanisms. Looking for a buddy to co-work quietly or do active review!"
+  availability: [],
+  bio: ""
 };
 
 export default function App() {
@@ -32,16 +31,13 @@ export default function App() {
   const loadedEmailRef = useRef<string>('');
 
   // State variables backed by localStorage
-  const [userProfile, setUserProfile] = useState<Omit<Student, 'id' | 'avatarSeed' | 'isCurrentlyFree'>>(() => {
-    const saved = localStorage.getItem('study_buddy_profile');
-    return saved ? JSON.parse(saved) : DEFAULT_PROFILE;
-  });
+  const [userProfile, setUserProfile] = useState<Omit<Student, 'id' | 'avatarSeed' | 'isCurrentlyFree'>>(EMPTY_PROFILE);
 
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
   const [reportedIds, setReportedIds] = useState<string[]>([]);
   const [swipedIds, setSwipedIds] = useState<string[]>([]);
-  const [matchedIds, setMatchedIds] = useState<string[]>(["student-1", "student-2"]);
-  const [studentsList, setStudentsList] = useState<Student[]>(MOCK_STUDENTS);
+  const [matchedIds, setMatchedIds] = useState<string[]>([]);
+  const [studentsList, setStudentsList] = useState<Student[]>([]);
 
   const handleImportStudents = (newStudents: Student[]) => {
     setStudentsList(prev => {
@@ -52,35 +48,9 @@ export default function App() {
     showToast(`Successfully imported ${newStudents.length} peer profiles!`, 'success');
   };
 
-  const [chatSessions, setChatSessions] = useState<Record<string, ChatSession>>({
-    "student-1": {
-      buddyId: "student-1",
-      lastInteraction: "August 21, 2026",
-      messages: [
-        { id: "init-1", senderId: "student-1", text: "Hey! I saw you are taking Linear Algebra too. Want to co-work sometime?", timestamp: "10:15 AM" }
-      ]
-    },
-    "student-2": {
-      buddyId: "student-2",
-      lastInteraction: "August 21, 2026",
-      messages: [
-        { id: "init-2", senderId: "student-2", text: "Yo! Ready to tackle CHEM 210 reaction mechanisms?", timestamp: "1:20 PM" }
-      ]
-    }
-  });
+  const [chatSessions, setChatSessions] = useState<Record<string, ChatSession>>({});
 
-  const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([
-    {
-      id: "completed-seed",
-      buddyId: "student-2",
-      course: "CHEM 210: Organic Chemistry II",
-      date: "Yesterday",
-      timeSlot: "Evening (6-8 PM)",
-      locationType: "In-person",
-      locationDetail: "Science & Chemistry Lounge Room 304",
-      status: "Completed"
-    }
-  ]);
+  const [scheduledSessions, setScheduledSessions] = useState<ScheduledSession[]>([]);
 
   // Current UI navigation tab
   const [activeTab, setActiveTab] = useState<'discover' | 'chats' | 'sessions' | 'profile' | 'pods'>('discover');
@@ -158,75 +128,15 @@ export default function App() {
     loadedEmailRef.current = '';
     localStorage.removeItem('study_buddy_token');
     setToken(null);
-    setUserProfile(DEFAULT_PROFILE);
+    setUserProfile(EMPTY_PROFILE);
     setBlockedIds([]);
     setReportedIds([]);
     setSwipedIds([]);
-    setMatchedIds(["student-1", "student-2"]);
-    setStudentsList(MOCK_STUDENTS);
-    setChatSessions({
-      "student-1": {
-        buddyId: "student-1",
-        lastInteraction: "August 21, 2026",
-        messages: [
-          { id: "init-1", senderId: "student-1", text: "Hey! I saw you are taking Linear Algebra too. Want to co-work sometime?", timestamp: "10:15 AM" }
-        ]
-      },
-      "student-2": {
-        buddyId: "student-2",
-        lastInteraction: "August 21, 2026",
-        messages: [
-          { id: "init-2", senderId: "student-2", text: "Yo! Ready to tackle CHEM 210 reaction mechanisms?", timestamp: "1:20 PM" }
-        ]
-      }
-    });
-    setScheduledSessions([
-      {
-        id: "completed-seed",
-        buddyId: "student-2",
-        course: "CHEM 210: Organic Chemistry II",
-        date: "Yesterday",
-        timeSlot: "Evening (6-8 PM)",
-        locationType: "In-person",
-        locationDetail: "Science & Chemistry Lounge Room 304",
-        status: "Completed"
-      }
-    ]);
-    setPods([
-      {
-        id: 'pod-1',
-        name: 'Computer Science Midterm Prep',
-        course: 'CS 101: Introduction to Computer Science',
-        creatorId: 'student-4',
-        memberIds: ['student-4', 'student-1'],
-        pendingRequestIds: [],
-        maxMembers: 4,
-        description: 'Reviewing recursion, pointer exercises, and preparing for the midterm exam. Focus is problem-solving with Miro whiteboards!',
-        style: 'Problem Solving'
-      },
-      {
-        id: 'pod-2',
-        name: 'Linear Algebra Study Group',
-        course: 'MATH 290: Linear Algebra',
-        creatorId: 'student-1',
-        memberIds: ['student-1', 'student-6'],
-        pendingRequestIds: [],
-        maxMembers: 3,
-        description: 'Active recall and quizzing each other on vector spaces, subspaces, and determinant properties. Join us!',
-        style: 'Active Recall'
-      },
-      {
-        id: 'pod-3',
-        name: 'Organic Chem Reaction Runners',
-        course: 'CHEM 210: Organic Chemistry II',
-        creatorId: 'student-2',
-        memberIds: ['student-2', 'student-5'],
-        pendingRequestIds: [],
-        maxMembers: 4,
-        description: 'Weekly reaction mechanisms discussion sessions. Group study at Chemistry lounge Room 304.',
-        style: 'Discussion-based'
-      }
-    ]);
+    setMatchedIds([]);
+    setStudentsList([]);
+    setChatSessions({});
+    setScheduledSessions([]);
+    setPods([]);
 
     showToast("Logged out of your peer account", "info");
   };
@@ -290,93 +200,23 @@ export default function App() {
 
     if (savedMatched) {
       try { setMatchedIds(JSON.parse(savedMatched)); } catch (e) { console.error(e); }
-    } else {
-      setMatchedIds(["student-1", "student-2"]);
-    }
+    } else setMatchedIds([]);
 
     if (savedCustomStudents) {
       try { setStudentsList(JSON.parse(savedCustomStudents)); } catch (e) { console.error(e); }
-    } else {
-      setStudentsList(MOCK_STUDENTS);
-    }
+    } else setStudentsList([]);
 
     if (savedChats) {
       try { setChatSessions(JSON.parse(savedChats)); } catch (e) { console.error(e); }
-    } else {
-      setChatSessions({
-        "student-1": {
-          buddyId: "student-1",
-          lastInteraction: "August 21, 2026",
-          messages: [
-            { id: "init-1", senderId: "student-1", text: `Hey ${userProfile.name || 'Arjun'}! I saw you are taking Linear Algebra too. Want to co-work sometime?`, timestamp: "10:15 AM" }
-          ]
-        },
-        "student-2": {
-          buddyId: "student-2",
-          lastInteraction: "August 21, 2026",
-          messages: [
-            { id: "init-2", senderId: "student-2", text: "Yo! Ready to tackle CHEM 210 reaction mechanisms?", timestamp: "1:20 PM" }
-          ]
-        }
-      });
-    }
+    } else setChatSessions({});
 
     if (savedSessions) {
       try { setScheduledSessions(JSON.parse(savedSessions)); } catch (e) { console.error(e); }
-    } else {
-      setScheduledSessions([
-        {
-          id: "completed-seed",
-          buddyId: "student-2",
-          course: "CHEM 210: Organic Chemistry II",
-          date: "Yesterday",
-          timeSlot: "Evening (6-8 PM)",
-          locationType: "In-person",
-          locationDetail: "Science & Chemistry Lounge Room 304",
-          status: "Completed"
-        }
-      ]);
-    }
+    } else setScheduledSessions([]);
 
     if (savedPods) {
       try { setPods(JSON.parse(savedPods)); } catch (e) { console.error(e); }
-    } else {
-      setPods([
-        {
-          id: 'pod-1',
-          name: 'Computer Science Midterm Prep',
-          course: 'CS 101: Introduction to Computer Science',
-          creatorId: 'student-4',
-          memberIds: ['student-4', 'student-1'],
-          pendingRequestIds: [],
-          maxMembers: 4,
-          description: 'Reviewing recursion, pointer exercises, and preparing for the midterm exam. Focus is problem-solving with Miro whiteboards!',
-          style: 'Problem Solving'
-        },
-        {
-          id: 'pod-2',
-          name: 'Linear Algebra Study Group',
-          course: 'MATH 290: Linear Algebra',
-          creatorId: 'student-1',
-          memberIds: ['student-1', 'student-6'],
-          pendingRequestIds: [],
-          maxMembers: 3,
-          description: 'Active recall and quizzing each other on vector spaces, subspaces, and determinant properties. Join us!',
-          style: 'Active Recall'
-        },
-        {
-          id: 'pod-3',
-          name: 'Organic Chem Reaction Runners',
-          course: 'CHEM 210: Organic Chemistry II',
-          creatorId: 'student-2',
-          memberIds: ['student-2', 'student-5'],
-          pendingRequestIds: [],
-          maxMembers: 4,
-          description: 'Weekly reaction mechanisms discussion sessions. Group study at Chemistry lounge Room 304.',
-          style: 'Discussion-based'
-        }
-      ]);
-    }
+    } else setPods([]);
   }, [userProfile.email, token]);
 
   // Synchronize states to local storage under user-specific keys
@@ -442,25 +282,6 @@ export default function App() {
 
     localStorage.setItem(`study_buddy_${userProfile.email}_pods`, JSON.stringify(pods));
   }, [pods, userProfile.email, token]);
-
-  // Reset demo capability to let users re-test matching from scratch
-  const handleResetDemo = () => {
-    if (window.confirm("Do you want to reset all local matches, chats, and schedules to start a clean study session discovery?")) {
-      const email = userProfile.email;
-      if (email) {
-        localStorage.removeItem(`study_buddy_${email}_profile`);
-        localStorage.removeItem(`study_buddy_${email}_blocked`);
-        localStorage.removeItem(`study_buddy_${email}_reported`);
-        localStorage.removeItem(`study_buddy_${email}_swiped`);
-        localStorage.removeItem(`study_buddy_${email}_matched`);
-        localStorage.removeItem(`study_buddy_${email}_custom_students`);
-        localStorage.removeItem(`study_buddy_${email}_chats`);
-        localStorage.removeItem(`study_buddy_${email}_sessions`);
-        localStorage.removeItem(`study_buddy_${email}_pods`);
-      }
-      window.location.reload();
-    }
-  };
 
   const [availabilityFilter, setAvailabilityFilter] = useState<string>(() => {
     return localStorage.getItem('study_buddy_avail_filter') || 'All';
@@ -843,18 +664,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Quick Demo Reset */}
           <div className="flex items-center gap-3" id="header-meta-actions">
-            <button
-              type="button"
-              id="reset-demo-btn"
-              onClick={handleResetDemo}
-              className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-slate-900 rounded-xl text-xs flex items-center gap-1 border border-slate-100 transition-colors"
-              title="Reset simulated data"
-            >
-              <RefreshCw className="w-3 h-3" />
-              <span className="hidden sm:inline font-bold uppercase tracking-wider text-[10px]">Reset Simulation</span>
-            </button>
             <button
               type="button"
               id="logout-btn"
@@ -1048,7 +858,7 @@ export default function App() {
                     <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-3" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-950">No More Profiles Available</h4>
                     <p className="text-xs text-slate-500 mt-2 px-6 leading-relaxed">
-                      You have browsed all compatible student profiles matching your class enrollment and "{availabilityFilter}" filter window. Expand your filters or reset the simulator.
+                      No compatible student profiles are available for your courses and "{availabilityFilter}" filter window yet. Invite classmates to create accounts and complete their profiles.
                     </p>
                   <div className="mt-6 flex justify-center gap-3" id="deck-empty-actions">
                     <button
@@ -1057,13 +867,6 @@ export default function App() {
                       className="px-4 py-2 bg-slate-950 hover:bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors"
                     >
                       Update My Courses
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleResetDemo}
-                      className="px-4 py-2 border border-slate-100 hover:bg-slate-50 text-slate-900 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors"
-                    >
-                      Reset Discovery Deck
                     </button>
                   </div>
                 </motion.div>

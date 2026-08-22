@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Student, ChatSession, ChatMessage } from '../types';
-import { MOCK_REPLIES } from '../data';
 import { 
   Send, Zap, Calendar, Ban, Check, Shield, Paperclip, 
   FileText, Image, File, BarChart2, Plus, X, Clock, 
@@ -72,30 +71,9 @@ export default function ChatPanel({
     e.preventDefault();
     if (!inputText.trim() || !selectedBuddyId) return;
 
-    const userMsgText = inputText.trim();
-    onSendMessage(selectedBuddyId, userMsgText);
+    onSendMessage(selectedBuddyId, inputText.trim());
     setInputText('');
-
-    // Trigger mock reply simulation
-    triggerMockReply(userMsgText);
-  };
-
-  const triggerMockReply = (triggerText: string, delay = 1800) => {
-    if (!selectedBuddyId) return;
-    setIsTyping(true);
-    
-    setTimeout(() => {
-      setIsTyping(false);
-      const replies = MOCK_REPLIES[selectedBuddyId] || ["That sounds like a plan!", "Let's definitely study."];
-      const messageIndex = activeSession ? activeSession.messages.length : 0;
-      let replyText = replies[Math.floor(messageIndex / 2) % replies.length];
-
-      if (triggerText.toLowerCase().includes('poll')) {
-        replyText = "Awesome, thanks for setting up that poll! I just selected my preferred times. Look at the poll status!";
-      }
-
-      onReceiveMessage(selectedBuddyId, replyText);
-    }, delay);
+    setIsTyping(false);
   };
 
   // Simulate file upload (PDF, JPEG, DOC)

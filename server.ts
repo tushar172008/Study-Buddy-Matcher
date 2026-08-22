@@ -46,22 +46,8 @@ function getSessionEmail(token: string) {
 // Helper to read users from the database file
 function readUsers() {
   if (!fs.existsSync(USERS_FILE)) {
-    // Seed default user to let the reviewer log in instantly
-    const initialUsers = [
-      {
-        email: 'arjun.sharma@university.edu',
-        password: hashPassword('password123'),
-        name: 'Arjun Sharma',
-        major: 'Computer Science',
-        courses: ["CS 101: Introduction to Computer Science", "MATH 290: Linear Algebra", "CHEM 210: Organic Chemistry II"],
-        studyStyle: 'Quiet Focus',
-        locationPreference: 'Hybrid',
-        availability: ["Mon Morning", "Tue Evening", "Thu Afternoon", "Fri Morning"],
-        bio: "Hi! I am a second-year CS major. Working through linear algebra proofs and organic chemistry synthesis reaction mechanisms. Looking for a buddy to co-work quietly or do active review!"
-      }
-    ];
-    fs.writeFileSync(USERS_FILE, JSON.stringify(initialUsers, null, 2));
-    return initialUsers;
+    fs.writeFileSync(USERS_FILE, '[]');
+    return [];
   }
   try {
     return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
