@@ -207,6 +207,7 @@ export default function SwipeCard({
                   onClick={() => handleAction('left')}
                   className="w-10 h-10 rounded-full border border-slate-100 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all active:scale-95"
                   title="Pass match"
+                  aria-label={`Pass on ${buddy.name}`}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -218,6 +219,7 @@ export default function SwipeCard({
                   onClick={() => handleAction('right')}
                   className="w-11 h-11 rounded-full bg-slate-950 hover:bg-black text-white flex items-center justify-center transition-all active:scale-95"
                   title="Connect & Study!"
+                  aria-label={`Connect with ${buddy.name}`}
                 >
                   <Check className="w-6 h-6" />
                 </button>

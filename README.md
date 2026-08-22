@@ -1,17 +1,33 @@
+# Study Buddy Matcher
 
-# Run and deploy 
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/deee3dc4-26eb-4485-b79d-c46fca7582ba
+Study Buddy Matcher helps university students find compatible peers based on shared courses, study style, availability, and preferred location. After signing in, students can discover matches, exchange messages, coordinate availability polls, schedule study sessions, import peer profiles, and organize small course-specific study pods.
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js 18+
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Start the development server:
    `npm run dev`
+3. Open `http://localhost:3000`.
+
+The demo account is shown on the sign-in screen. For map search and geocoding, create a local `.env` file and add:
+
+```text
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+```
+
+Never commit `.env` or real API keys. The included `.env.example` contains placeholders only.
+
+## Validation
+
+Run the TypeScript check with `npm run lint`.
+
+## Product Focus
+
+- Course-first peer matching with explainable compatibility reasons
+- In-person, virtual, and hybrid study coordination
+- Private chat, time polls, file sharing, and scheduled sessions
+- Small study pods with join requests and capacity limits
+- Campus location discovery for planned in-person sessions

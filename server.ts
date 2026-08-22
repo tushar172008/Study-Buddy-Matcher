@@ -1,6 +1,8 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
+import "dotenv/config";
 import { createServer as createViteServer } from "vite";
 
 const app = express();
@@ -10,6 +12,26 @@ app.use(express.json());
 
 // Path to simulated database file inside workspace root
 const USERS_FILE = path.join(process.cwd(), 'users_db.json');
+const sessions = new Map<string, string>();
+
+function hashPassword(password: string) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password: string, storedPassword: string) {
+  if (!storedPassword.includes(':')) return storedPassword === password;
+  const [salt, storedHash] = storedPassword.split(':');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(storedHash, 'hex'));
+}
+
+function createSession(email: string) {
+  const token = crypto.randomUUID();
+  sessions.set(token, email.toLowerCase());
+  return token;
+}
 
 // Helper to read users from the database file
 function readUsers() {
@@ -18,7 +40,7 @@ function readUsers() {
     const initialUsers = [
       {
         email: 'arjun.sharma@university.edu',
-        password: 'password123',
+        password: hashPassword('password123'),
         name: 'Arjun Sharma',
         major: 'Computer Science',
         courses: ["CS 101: Introduction to Computer Science", "MATH 290: Linear Algebra", "CHEM 210: Organic Chemistry II"],
@@ -68,7 +90,7 @@ app.post("/api/auth/signup", (req, res) => {
 
   const newUser = {
     email: email.toLowerCase(),
-    password, // Plain-text passwords for lightweight demonstration ease
+    password: hashPassword(password),
     name,
     major: major || "Computer Science",
     courses: courses || [],
@@ -85,7 +107,7 @@ app.post("/api/auth/signup", (req, res) => {
   res.json({
     success: true,
     user: userWithoutPassword,
-    token: `simulated-token-${newUser.email}`
+    token: createSession(newUser.email)
   });
 });
 
@@ -99,18 +121,24 @@ app.post("/api/auth/signin", (req, res) => {
 
   const users = readUsers();
   const matchedUser = users.find(
-    (u: any) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    (u: any) => u.email.toLowerCase() === email.toLowerCase() && verifyPassword(password, u.password)
   );
 
   if (!matchedUser) {
     return res.status(400).json({ error: "Incorrect email address or password. Please try again." });
   }
 
+  // Upgrade legacy demo records the first time they authenticate.
+  if (!matchedUser.password.includes(':')) {
+    matchedUser.password = hashPassword(password);
+    writeUsers(users);
+  }
+
   const { password: _, ...userWithoutPassword } = matchedUser;
   res.json({
     success: true,
     user: userWithoutPassword,
-    token: `simulated-token-${matchedUser.email}`
+    token: createSession(matchedUser.email)
   });
 });
 
@@ -118,11 +146,11 @@ app.post("/api/auth/signin", (req, res) => {
 app.post("/api/auth/me", (req, res) => {
   const { token } = req.body;
 
-  if (!token || !token.startsWith("simulated-token-")) {
+  if (!token || !sessions.has(token)) {
     return res.status(401).json({ error: "Access denied. Invalid session token." });
   }
 
-  const email = token.substring("simulated-token-".length).toLowerCase();
+  const email = sessions.get(token)!;
   const users = readUsers();
   const matchedUser = users.find((u: any) => u.email.toLowerCase() === email);
 
@@ -143,7 +171,8 @@ app.get("/api/maps/geocode", async (req, res) => {
   if (!lat || !lng) {
     return res.status(400).json({ error: "Missing latitude or longitude parameters." });
   }
-  const apiKey = "AIzaSyDt1JeqNroBg-CfFvYcgPO-rEgYzo9UPiY";
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return res.status(503).json({ error: "Maps service is not configured." });
   try {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
     const response = await fetch(url);
@@ -160,7 +189,8 @@ app.get("/api/maps/search", async (req, res) => {
   if (!query) {
     return res.status(400).json({ error: "Missing query search term." });
   }
-  const apiKey = "AIzaSyDt1JeqNroBg-CfFvYcgPO-rEgYzo9UPiY";
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return res.status(503).json({ error: "Maps service is not configured." });
   try {
     const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query as string)}&key=${apiKey}`;
     const response = await fetch(url);

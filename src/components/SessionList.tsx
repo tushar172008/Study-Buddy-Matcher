@@ -133,6 +133,7 @@ export default function SessionList({
                   onMouseLeave={() => setHoveredSpotId(null)}
                   style={{ left: `${spot.coords.x}%`, top: `${spot.coords.y}%` }}
                   className="absolute transform -translate-x-1/2 -translate-y-1/2 group z-10 transition-all"
+                  aria-label={`Filter sessions at ${spot.shortName}`}
                 >
                   {/* Dynamic Pulsing Rings */}
                   <span className={`absolute inset-0 rounded-full w-8 h-8 -m-2 opacity-30 ${
