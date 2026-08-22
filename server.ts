@@ -12,7 +12,7 @@ app.use(express.json());
 
 // Path to simulated database file inside workspace root
 const USERS_FILE = path.join(process.cwd(), 'users_db.json');
-const sessions = new Map<string, string>();
+const SESSION_SECRET = process.env.SESSION_SECRET || 'development-only-session-secret';
 
 function hashPassword(password: string) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -28,9 +28,19 @@ function verifyPassword(password: string, storedPassword: string) {
 }
 
 function createSession(email: string) {
-  const token = crypto.randomUUID();
-  sessions.set(token, email.toLowerCase());
-  return token;
+  const encodedEmail = Buffer.from(email.toLowerCase()).toString('base64url');
+  const signature = crypto.createHmac('sha256', SESSION_SECRET).update(encodedEmail).digest('base64url');
+  return `${encodedEmail}.${signature}`;
+}
+
+function getSessionEmail(token: string) {
+  const [encodedEmail, signature] = token.split('.');
+  if (!encodedEmail || !signature) return null;
+  const expectedSignature = crypto.createHmac('sha256', SESSION_SECRET).update(encodedEmail).digest('base64url');
+  if (signature.length !== expectedSignature.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+    return null;
+  }
+  return Buffer.from(encodedEmail, 'base64url').toString('utf8');
 }
 
 // Helper to read users from the database file
@@ -146,11 +156,11 @@ app.post("/api/auth/signin", (req, res) => {
 app.post("/api/auth/me", (req, res) => {
   const { token } = req.body;
 
-  if (!token || !sessions.has(token)) {
+  const email = token ? getSessionEmail(token) : null;
+  if (!email) {
     return res.status(401).json({ error: "Access denied. Invalid session token." });
   }
 
-  const email = sessions.get(token)!;
   const users = readUsers();
   const matchedUser = users.find((u: any) => u.email.toLowerCase() === email);
 
@@ -222,4 +232,8 @@ async function startServer() {
   });
 }
 
-startServer();
+export { app };
+
+if (!process.env.VERCEL) {
+  startServer();
+}
