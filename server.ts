@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import { Pool } from "pg";
 import "dotenv/config";
 import { createServer as createViteServer } from "vite";
 
@@ -10,9 +11,13 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Use persistent storage in production when USERS_FILE is configured.
-const USERS_FILE = process.env.USERS_FILE || path.join(process.cwd(), 'users_db.json');
+// Vercel's app directory is read-only, so use /tmp unless a database or file path is configured.
+const defaultUsersFile = process.env.VERCEL
+  ? path.join('/tmp', 'users_db.json')
+  : path.join(process.cwd(), 'users_db.json');
+const USERS_FILE = process.env.USERS_FILE || defaultUsersFile;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'development-only-session-secret';
+const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }) : null;
 
 function hashPassword(password: string) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -68,12 +73,89 @@ function writeUsers(users: any[]) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
+async function initializeDatabase() {
+  if (!pool) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      email TEXT PRIMARY KEY,
+      password TEXT NOT NULL,
+      profile JSONB NOT NULL DEFAULT '{}'::jsonb
+    );
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id TEXT PRIMARY KEY,
+      sender_email TEXT NOT NULL,
+      recipient_email TEXT NOT NULL,
+      message JSONB NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS matches (
+      user_email TEXT NOT NULL,
+      buddy_email TEXT NOT NULL,
+      PRIMARY KEY (user_email, buddy_email)
+    );
+  `);
+}
+
+const databaseReady = initializeDatabase();
+
+function userId(email: string) {
+  return `user-${Buffer.from(email.toLowerCase()).toString('base64url')}`;
+}
+
+function publicProfile(user: any) {
+  const profile = user.profile || user;
+  return {
+    id: userId(user.email),
+    name: profile.name,
+    email: user.email,
+    major: profile.major || "Undecided",
+    courses: Array.isArray(profile.courses) ? profile.courses : [],
+    studyStyle: profile.studyStyle || "Quiet Focus",
+    locationPreference: profile.locationPreference || "Hybrid",
+    availability: Array.isArray(profile.availability) ? profile.availability : [],
+    bio: profile.bio || "",
+    isCurrentlyFree: false,
+    avatarSeed: profile.avatarSeed || String(profile.name || user.email).split(' ').map((part: string) => part[0]).join('').substring(0, 2).toUpperCase()
+  };
+}
+
+async function getDatabaseUsers() {
+  if (pool) {
+    await databaseReady;
+    const result = await pool.query('SELECT email, password, profile FROM users');
+    return result.rows;
+  }
+  return readUsers().map((user: any) => ({ email: user.email, password: user.password, profile: user }));
+}
+
+async function saveDatabaseUser(user: any) {
+  if (pool) {
+    await databaseReady;
+    await pool.query(
+      'INSERT INTO users (email, password, profile) VALUES ($1, $2, $3) ON CONFLICT (email) DO UPDATE SET password = $2, profile = $3',
+      [user.email, user.password, user.profile]
+    );
+    return;
+  }
+  const users = readUsers();
+  const index = users.findIndex((existing: any) => existing.email === user.email);
+  const storedUser = { ...user.profile, email: user.email, password: user.password };
+  if (index >= 0) users[index] = storedUser;
+  else users.push(storedUser);
+  writeUsers(users);
+}
+
 // Ensure the db is initialized right away
 readUsers();
 
 // API Health Check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", uptime: process.uptime() });
+  res.json({
+    status: "ok",
+    uptime: process.uptime(),
+    storage: pool ? "postgresql" : "temporary-file",
+    persistentStorageConfigured: Boolean(pool)
+  });
 });
 
 // Authentication Sign Up Endpoint
@@ -82,13 +164,6 @@ app.post("/api/auth/signup", (req, res) => {
   
   if (!email || !password || !name) {
     return res.status(400).json({ error: "Name, email, and password are required fields." });
-  }
-
-  const users = readUsers();
-  const alreadyExists = users.some((u: any) => u.email.toLowerCase() === email.toLowerCase());
-
-  if (alreadyExists) {
-    return res.status(400).json({ error: "A student account with this email address already exists." });
   }
 
   const newUser = {
@@ -103,26 +178,26 @@ app.post("/api/auth/signup", (req, res) => {
     bio: bio || ""
   };
 
-  users.push(newUser);
-  writeUsers(users);
-
-  const { password: _, ...userWithoutPassword } = newUser;
-  res.json({
-    success: true,
-    user: userWithoutPassword,
-    token: createSession(newUser.email)
-  });
+  (async () => {
+    const users = await getDatabaseUsers();
+    if (users.some((user: any) => user.email.toLowerCase() === email.toLowerCase())) {
+      return res.status(400).json({ error: "A student account with this email address already exists." });
+    }
+    const { password: passwordHash, ...profile } = newUser;
+    await saveDatabaseUser({ email: newUser.email, password: passwordHash, profile });
+    res.json({ success: true, user: publicProfile({ email: newUser.email, profile }), token: createSession(newUser.email) });
+  })().catch(() => res.status(500).json({ error: "Unable to create account." }));
 });
 
 // Authentication Sign In Endpoint
-app.post("/api/auth/signin", (req, res) => {
+app.post("/api/auth/signin", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required fields." });
   }
 
-  const users = readUsers();
+  const users = await getDatabaseUsers();
   const matchedUser = users.find(
     (u: any) => u.email.toLowerCase() === email.toLowerCase() && verifyPassword(password, u.password)
   );
@@ -134,19 +209,18 @@ app.post("/api/auth/signin", (req, res) => {
   // Upgrade legacy plaintext records the first time they authenticate.
   if (!matchedUser.password.includes(':')) {
     matchedUser.password = hashPassword(password);
-    writeUsers(users);
+    await saveDatabaseUser(matchedUser);
   }
 
-  const { password: _, ...userWithoutPassword } = matchedUser;
   res.json({
     success: true,
-    user: userWithoutPassword,
+    user: publicProfile(matchedUser),
     token: createSession(matchedUser.email)
   });
 });
 
 // Session Verification / Authentication Recovery Endpoint
-app.post("/api/auth/me", (req, res) => {
+app.post("/api/auth/me", async (req, res) => {
   const { token } = req.body;
 
   const email = token ? getSessionEmail(token) : null;
@@ -154,44 +228,91 @@ app.post("/api/auth/me", (req, res) => {
     return res.status(401).json({ error: "Access denied. Invalid session token." });
   }
 
-  const users = readUsers();
+  const users = await getDatabaseUsers();
   const matchedUser = users.find((u: any) => u.email.toLowerCase() === email);
 
   if (!matchedUser) {
     return res.status(401).json({ error: "User profile no longer exists." });
   }
 
-  const { password: _, ...userWithoutPassword } = matchedUser;
   res.json({
     success: true,
-    user: userWithoutPassword
+    user: publicProfile(matchedUser)
   });
 });
 
+app.put("/api/auth/profile", async (req, res) => {
+  const email = getAuthenticatedEmail(req);
+  if (!email) return res.status(401).json({ error: "Access denied. Invalid session token." });
+  const users = await getDatabaseUsers();
+  const currentUser = users.find((user: any) => user.email.toLowerCase() === email.toLowerCase());
+  if (!currentUser) return res.status(404).json({ error: "User profile not found." });
+  const profile = { ...currentUser.profile, ...req.body, email: currentUser.email };
+  await saveDatabaseUser({ email: currentUser.email, password: currentUser.password, profile });
+  res.json({ success: true, user: publicProfile({ email: currentUser.email, profile }) });
+});
+
 // Return registered student profiles for the authenticated discovery deck.
-app.get("/api/students", (req, res) => {
+app.get("/api/students", async (req, res) => {
   const email = getAuthenticatedEmail(req);
   if (!email) {
     return res.status(401).json({ error: "Access denied. Invalid session token." });
   }
 
-  const students = readUsers()
+  const students = (await getDatabaseUsers())
     .filter((user: any) => user.email.toLowerCase() !== email.toLowerCase())
-    .map((user: any) => ({
-      id: user.id || `user-${Buffer.from(user.email.toLowerCase()).toString('base64url')}`,
-      name: user.name,
-      email: user.email,
-      major: user.major || "Undecided",
-      courses: Array.isArray(user.courses) ? user.courses : [],
-      studyStyle: user.studyStyle || "Quiet Focus",
-      locationPreference: user.locationPreference || "Hybrid",
-      availability: Array.isArray(user.availability) ? user.availability : [],
-      bio: user.bio || "",
-      isCurrentlyFree: false,
-      avatarSeed: user.avatarSeed || user.name.split(' ').map((part: string) => part[0]).join('').substring(0, 2).toUpperCase()
-    }));
+    .map(publicProfile);
 
   res.json({ students });
+});
+
+app.get("/api/chats/:buddyId", async (req, res) => {
+  const email = getAuthenticatedEmail(req);
+  if (!email) return res.status(401).json({ error: "Access denied. Invalid session token." });
+  const buddyEmail = Buffer.from(req.params.buddyId.replace(/^user-/, ''), 'base64url').toString('utf8');
+  await databaseReady;
+  if (!pool) return res.json({ messages: [] });
+  const result = await pool.query(
+    'SELECT message FROM chat_messages WHERE (sender_email = $1 AND recipient_email = $2) OR (sender_email = $2 AND recipient_email = $1) ORDER BY created_at',
+    [email, buddyEmail]
+  );
+  res.json({ messages: result.rows.map(row => ({
+    ...row.message,
+    senderId: row.sender_email === email ? 'me' : userId(row.sender_email)
+  })) });
+});
+
+app.post("/api/chats/:buddyId", async (req, res) => {
+  const email = getAuthenticatedEmail(req);
+  if (!email) return res.status(401).json({ error: "Access denied. Invalid session token." });
+  const buddyEmail = Buffer.from(req.params.buddyId.replace(/^user-/, ''), 'base64url').toString('utf8');
+  if (!pool) return res.status(503).json({ error: "Chat database is not configured." });
+  await databaseReady;
+  const message = { ...req.body, senderId: userId(email) };
+  await pool.query(
+    'INSERT INTO chat_messages (id, sender_email, recipient_email, message) VALUES ($1, $2, $3, $4)',
+    [message.id, email, buddyEmail, message]
+  );
+  res.json({ success: true, message });
+});
+
+app.get("/api/matches", async (req, res) => {
+  const email = getAuthenticatedEmail(req);
+  if (!email) return res.status(401).json({ error: "Access denied. Invalid session token." });
+  if (!pool) return res.json({ matchedIds: [] });
+  await databaseReady;
+  const result = await pool.query('SELECT buddy_email FROM matches WHERE user_email = $1', [email]);
+  res.json({ matchedIds: result.rows.map(row => userId(row.buddy_email)) });
+});
+
+app.post("/api/matches/:buddyId", async (req, res) => {
+  const email = getAuthenticatedEmail(req);
+  if (!email) return res.status(401).json({ error: "Access denied. Invalid session token." });
+  if (!pool) return res.json({ success: true });
+  await databaseReady;
+  const buddyEmail = Buffer.from(req.params.buddyId.replace(/^user-/, ''), 'base64url').toString('utf8');
+  await pool.query('INSERT INTO matches (user_email, buddy_email) VALUES ($1, $2) ON CONFLICT DO NOTHING', [email, buddyEmail]);
+  res.json({ success: true });
 });
 
 // Maps Proxy for Geocoding (coordinates -> address name)

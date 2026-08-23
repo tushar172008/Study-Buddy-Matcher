@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Student, MatchResult } from '../types';
 import { Check, X, ShieldAlert, AlertTriangle, AlertCircle } from 'lucide-react';
+import { courseKey } from '../courseUtils';
 
 interface SwipeCardProps {
   userProfile: Omit<Student, 'id' | 'avatarSeed' | 'isCurrentlyFree'>;
@@ -26,7 +27,7 @@ export default function SwipeCard({
   const [reportEscalated, setReportEscalated] = useState(false);
 
   // Calculate matching stats dynamically
-  const commonCourses = buddy.courses.filter(c => userProfile.courses.includes(c));
+  const commonCourses = buddy.courses.filter(c => userProfile.courses.some(userCourse => courseKey(c) === courseKey(userCourse)));
   const commonAvail = buddy.availability.filter(a => userProfile.availability.includes(a));
   const isStyleMatch = buddy.studyStyle === userProfile.studyStyle;
   const isLocationMatch = buddy.locationPreference === userProfile.locationPreference || 
@@ -96,13 +97,8 @@ export default function SwipeCard({
             id={`active-swipe-card-${buddy.id}`}
             className="w-full min-h-[550px] bg-white border border-slate-100 rounded-3xl p-6 flex flex-col justify-between hover:shadow-sm transition-shadow duration-200 relative"
           >
-            {/* Top Row: Major and Match Score Badge */}
-            <div className="flex justify-between items-start" id="card-header">
-              <div id="card-major-box">
-                <span className="text-[10px] font-bold text-slate-900 tracking-wider uppercase bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100" id="card-major">
-                  {buddy.major}
-                </span>
-              </div>
+            {/* Top Row: Match Score Badge */}
+            <div className="flex justify-end items-start" id="card-header">
               <div 
                 id="card-score-badge"
                 className="flex flex-col items-end px-3 py-1 rounded-xl border border-slate-100 bg-slate-50 text-slate-900"

@@ -30,7 +30,6 @@ const LOCATION_PREFS: LocationPref[] = [
 export default function ProfileForm({ profile, onSaveProfile, message }: ProfileFormProps) {
   const [name, setName] = useState(profile.name);
   const [email, setEmail] = useState(profile.email);
-  const [major, setMajor] = useState(profile.major);
   const [studyStyle, setStudyStyle] = useState<StudyStyle>(profile.studyStyle);
   const [locationPreference, setLocationPreference] = useState<LocationPref>(profile.locationPreference);
   const [courses, setCourses] = useState<string[]>(profile.courses);
@@ -69,7 +68,7 @@ export default function ProfileForm({ profile, onSaveProfile, message }: Profile
     onSaveProfile({
       name,
       email,
-      major,
+      major: profile.major,
       studyStyle,
       locationPreference,
       courses,
@@ -150,22 +149,6 @@ export default function ProfileForm({ profile, onSaveProfile, message }: Profile
           )}
         </div>
 
-        {/* Major input */}
-        <div className="space-y-1.5 md:col-span-2" id="field-group-major">
-          <label htmlFor="student-major" className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-            <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
-            Major / Concentration
-          </label>
-          <input
-            type="text"
-            id="student-major"
-            required
-            placeholder="e.g. Cognitive Science, pre-med track"
-            value={major}
-            onChange={(e) => setMajor(e.target.value)}
-            className="w-full text-xs px-3 py-2 border border-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-950 bg-white"
-          />
-        </div>
       </div>
 
       {/* Course enrollment chips selector */}

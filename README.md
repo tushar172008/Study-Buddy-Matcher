@@ -18,6 +18,8 @@ For map search and geocoding, create a local `.env` file and add:
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 ```
 
+For Vercel, also add a hosted PostgreSQL connection string as `DATABASE_URL`. Without it, Vercel uses temporary storage and accounts may not survive function restarts.
+
 Never commit `.env` or real API keys. The included `.env.example` contains placeholders only.
 
 ## Validation

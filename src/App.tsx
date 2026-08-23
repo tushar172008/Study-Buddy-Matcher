@@ -8,6 +8,7 @@ import ScheduleModal from './components/ScheduleModal';
 import StudyPodsPanel from './components/StudyPodsPanel';
 import AuthScreen from './components/AuthScreen';
 import DataImportWidget from './components/DataImportWidget';
+import { courseKey } from './courseUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, MessagesSquare, CalendarRange, UserCircle, Sparkles, AlertCircle, Check, Users, LogOut } from 'lucide-react';
 
@@ -245,6 +246,47 @@ export default function App() {
     loadRegisteredStudents();
   }, [token, userProfile.email]);
 
+  useEffect(() => {
+    if (!token || matchedIds.length === 0) return;
+
+    const loadChats = async () => {
+      const loadedChats = await Promise.all(matchedIds.map(async buddyId => {
+        try {
+          const response = await fetch(`/api/chats/${buddyId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!response.ok) return null;
+          const data = await response.json();
+          return [buddyId, {
+            buddyId,
+            messages: Array.isArray(data.messages) ? data.messages : [],
+            lastInteraction: data.messages?.at(-1)?.timestamp || ''
+          }] as const;
+        } catch (error) {
+          console.error('Failed to load shared chat', error);
+          return null;
+        }
+      }));
+
+      setChatSessions(previous => ({
+        ...previous,
+        ...Object.fromEntries(loadedChats.filter((chat): chat is NonNullable<typeof chat> => chat !== null))
+      }));
+    };
+
+    loadChats();
+  }, [matchedIds, token]);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch('/api/matches', { headers: { Authorization: `Bearer ${token}` } })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        if (Array.isArray(data?.matchedIds)) setMatchedIds(previous => Array.from(new Set([...previous, ...data.matchedIds])));
+      })
+      .catch(error => console.error('Failed to load shared matches', error));
+  }, [token]);
+
   // Synchronize states to local storage under user-specific keys
   useEffect(() => {
     if (!token || !userProfile.email) return;
@@ -322,7 +364,8 @@ export default function App() {
     s => !blockedIds.includes(s.id) && 
          !reportedIds.includes(s.id) && 
          !swipedIds.includes(s.id) &&
-         !matchedIds.includes(s.id)
+         !matchedIds.includes(s.id) &&
+         s.courses.some(course => userProfile.courses.some(userCourse => courseKey(course) === courseKey(userCourse)))
   );
 
   const discoverableStudents = baseDiscoverable.filter(s => {
@@ -353,31 +396,18 @@ export default function App() {
   const handleAcceptMatch = (buddy: Student, score: number, explanations: string[]) => {
     setSwipedIds(prev => [...prev, buddy.id]);
     
-    // In our simulation, they automatically "swipe back" with an 85% probability,
-    // as we want to trigger matches for testing. (PRD 9, Calm confirmation modal)
-    const isMutualMatch = Math.random() < 0.85;
-
-    if (isMutualMatch) {
-      setMatchedIds(prev => [...prev, buddy.id]);
-      setJustMatchedBuddy(buddy);
-      
-      // Seed an empty chat session for them
-      setChatSessions(prev => ({
-        ...prev,
-        [buddy.id]: {
-          buddyId: buddy.id,
-          lastInteraction: "Just Now",
-          messages: [
-            {
-              id: `match-msg-${Date.now()}`,
-              senderId: buddy.id,
-              text: `Hey! I noticed we both taking ${buddy.courses[0].split(':')[0]}. Let's team up to study!`,
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }
-          ]
-        }
-      }));
+    setMatchedIds(prev => [...prev, buddy.id]);
+    if (token) {
+      fetch(`/api/matches/${buddy.id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(error => console.error('Failed to save shared match', error));
     }
+    setJustMatchedBuddy(buddy);
+    setChatSessions(prev => ({
+      ...prev,
+      [buddy.id]: prev[buddy.id] || { buddyId: buddy.id, lastInteraction: '', messages: [] }
+    }));
   };
 
   const handlePassMatch = (buddyId: string) => {
@@ -419,6 +449,14 @@ export default function App() {
         }
       };
     });
+
+    if (token) {
+      fetch(`/api/chats/${buddyId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(newMsg)
+      }).catch(error => console.error('Failed to save shared chat message', error));
+    }
   };
 
   // Chat message receive handler
@@ -641,8 +679,20 @@ export default function App() {
   };
 
   // Handle saving of profile
-  const handleSaveProfile = (updatedProfile: Omit<Student, 'id' | 'avatarSeed' | 'isCurrentlyFree'>) => {
+  const handleSaveProfile = async (updatedProfile: Omit<Student, 'id' | 'avatarSeed' | 'isCurrentlyFree'>) => {
     setUserProfile(updatedProfile);
+    if (token) {
+      try {
+        const response = await fetch('/api/auth/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(updatedProfile)
+        });
+        if (!response.ok) throw new Error('Profile update failed');
+      } catch (error) {
+        console.error('Failed to save profile to the shared database', error);
+      }
+    }
     setProfileSaveMsg('Academic profile updated successfully! Re-calculating peer match compatibility...');
     setTimeout(() => setProfileSaveMsg(''), 4000);
   };
