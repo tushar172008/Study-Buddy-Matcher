@@ -110,7 +110,7 @@ export default function DataImportWidget({ onImportStudents, existingCount }: Da
           Import Peer Student Data
         </h3>
         <p className="text-xs text-slate-500 mt-1">
-          Dynamically populate the matching deck by uploading custom peer profiles. Currently hosting <strong className="font-bold text-slate-900">{existingCount}</strong> simulated campus students.
+          Dynamically populate the matching deck by uploading custom peer profiles. Currently hosting <strong className="font-bold text-slate-900">{existingCount}</strong> imported peer profiles.
         </p>
       </div>
 

@@ -12,7 +12,7 @@ Study Buddy Matcher helps university students find compatible peers based on sha
    `npm run dev`
 3. Open `http://localhost:3000`.
 
-The demo account is shown on the sign-in screen. For map search and geocoding, create a local `.env` file and add:
+For map search and geocoding, create a local `.env` file and add:
 
 ```text
 GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here

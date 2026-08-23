@@ -80,7 +80,7 @@ export default function SwipeCard({
   };
 
   return (
-    <div className="relative max-w-md mx-auto h-[550px]" id={`swipe-card-wrapper-${buddy.id}`}>
+    <div className="relative max-w-md mx-auto min-h-[550px]" id={`swipe-card-wrapper-${buddy.id}`}>
       <AnimatePresence mode="wait">
         {!swipeDirection && (
           <motion.div
@@ -94,7 +94,7 @@ export default function SwipeCard({
               transition: { duration: 0.35 }
             }}
             id={`active-swipe-card-${buddy.id}`}
-            className="w-full h-full bg-white border border-slate-100 rounded-3xl p-6 flex flex-col justify-between hover:shadow-sm transition-shadow duration-200 relative"
+            className="w-full min-h-[550px] bg-white border border-slate-100 rounded-3xl p-6 flex flex-col justify-between hover:shadow-sm transition-shadow duration-200 relative"
           >
             {/* Top Row: Major and Match Score Badge */}
             <div className="flex justify-between items-start" id="card-header">

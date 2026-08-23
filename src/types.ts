@@ -60,7 +60,7 @@ export interface StudyPod {
   id: string;
   name: string;
   course: string;
-  creatorId: string; // "me" for the user, or student-id for mock buddies
+  creatorId: string; // "me" for the current user, or a student ID
   memberIds: string[]; // Student IDs (including creator)
   pendingRequestIds: string[]; // Student IDs requesting to join
   maxMembers: number; // 3 or 4 for small groups

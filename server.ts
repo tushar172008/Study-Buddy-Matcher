@@ -10,7 +10,7 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Path to simulated database file inside workspace root
+// Path to the user database file inside the workspace root
 const USERS_FILE = path.join(process.cwd(), 'users_db.json');
 const SESSION_SECRET = process.env.SESSION_SECRET || 'development-only-session-secret';
 
@@ -41,6 +41,12 @@ function getSessionEmail(token: string) {
     return null;
   }
   return Buffer.from(encodedEmail, 'base64url').toString('utf8');
+}
+
+function getAuthenticatedEmail(req: express.Request) {
+  const authorization = req.headers.authorization;
+  if (!authorization?.startsWith('Bearer ')) return null;
+  return getSessionEmail(authorization.slice('Bearer '.length));
 }
 
 // Helper to read users from the database file
@@ -124,7 +130,7 @@ app.post("/api/auth/signin", (req, res) => {
     return res.status(400).json({ error: "Incorrect email address or password. Please try again." });
   }
 
-  // Upgrade legacy demo records the first time they authenticate.
+  // Upgrade legacy plaintext records the first time they authenticate.
   if (!matchedUser.password.includes(':')) {
     matchedUser.password = hashPassword(password);
     writeUsers(users);
@@ -159,6 +165,32 @@ app.post("/api/auth/me", (req, res) => {
     success: true,
     user: userWithoutPassword
   });
+});
+
+// Return registered student profiles for the authenticated discovery deck.
+app.get("/api/students", (req, res) => {
+  const email = getAuthenticatedEmail(req);
+  if (!email) {
+    return res.status(401).json({ error: "Access denied. Invalid session token." });
+  }
+
+  const students = readUsers()
+    .filter((user: any) => user.email.toLowerCase() !== email.toLowerCase())
+    .map((user: any) => ({
+      id: user.id || `user-${Buffer.from(user.email.toLowerCase()).toString('base64url')}`,
+      name: user.name,
+      email: user.email,
+      major: user.major || "Undecided",
+      courses: Array.isArray(user.courses) ? user.courses : [],
+      studyStyle: user.studyStyle || "Quiet Focus",
+      locationPreference: user.locationPreference || "Hybrid",
+      availability: Array.isArray(user.availability) ? user.availability : [],
+      bio: user.bio || "",
+      isCurrentlyFree: false,
+      avatarSeed: user.avatarSeed || user.name.split(' ').map((part: string) => part[0]).join('').substring(0, 2).toUpperCase()
+    }));
+
+  res.json({ students });
 });
 
 // Maps Proxy for Geocoding (coordinates -> address name)

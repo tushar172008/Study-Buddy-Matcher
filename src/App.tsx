@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Student, ChatSession, ScheduledSession, MatchResult, StudyPod, StudyStyle } from './types';
-import FeaturesRow from './components/FeaturesRow';
 import ProfileForm from './components/ProfileForm';
 import SwipeCard from './components/SwipeCard';
 import ChatPanel from './components/ChatPanel';
@@ -218,6 +217,33 @@ export default function App() {
       try { setPods(JSON.parse(savedPods)); } catch (e) { console.error(e); }
     } else setPods([]);
   }, [userProfile.email, token]);
+
+  // Load profiles belonging to other registered accounts into discovery.
+  useEffect(() => {
+    if (!token || !userProfile.email) return;
+
+    const loadRegisteredStudents = async () => {
+      try {
+        const response = await fetch('/api/students', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!Array.isArray(data.students)) return;
+
+        setStudentsList(prev => {
+          const studentsById = new Map(prev.map(student => [student.id, student]));
+          data.students.forEach((student: Student) => studentsById.set(student.id, student));
+          return Array.from(studentsById.values());
+        });
+      } catch (error) {
+        console.error('Failed to load registered student profiles', error);
+      }
+    };
+
+    loadRegisteredStudents();
+  }, [token, userProfile.email]);
 
   // Synchronize states to local storage under user-specific keys
   useEffect(() => {
@@ -650,7 +676,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans" id="app-root-container">
+    <div className="min-h-screen overflow-x-hidden bg-white text-slate-900 font-sans" id="app-root-container">
       {/* Top Banner Navigation (Academic design, pure white background, crisp borders) */}
       <header className="border-b border-slate-100 bg-white sticky top-0 z-40" id="app-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between" id="header-inner">
@@ -780,9 +806,6 @@ export default function App() {
             My Profile
           </button>
         </div>
-
-        {/* Row of 3 Feature Cards (Requirement: "3 features card in row" on active study landing panel) */}
-        <FeaturesRow />
 
         {/* Tab Views Panel */}
         <div className="mt-4" id="tab-views-root">
