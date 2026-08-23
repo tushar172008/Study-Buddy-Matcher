@@ -323,42 +323,6 @@ app.post("/api/matches/:buddyId", async (req, res) => {
   res.json({ success: true });
 });
 
-// Maps Proxy for Geocoding (coordinates -> address name)
-app.get("/api/maps/geocode", async (req, res) => {
-  const { lat, lng } = req.query;
-  if (!lat || !lng) {
-    return res.status(400).json({ error: "Missing latitude or longitude parameters." });
-  }
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: "Maps service is not configured." });
-  try {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    res.json(data);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Failed to geocode coordinates" });
-  }
-});
-
-// Maps Proxy for Text Search (address string -> coordinates & details)
-app.get("/api/maps/search", async (req, res) => {
-  const { query } = req.query;
-  if (!query) {
-    return res.status(400).json({ error: "Missing query search term." });
-  }
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: "Maps service is not configured." });
-  try {
-    const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query as string)}&key=${apiKey}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    res.json(data);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || "Failed to search places" });
-  }
-});
-
 // Vite Middleware Mounting for dev environments
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

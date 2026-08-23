@@ -12,12 +12,6 @@ Study Buddy Matcher helps university students find compatible peers based on sha
    `npm run dev`
 3. Open `http://localhost:3000`.
 
-For map search and geocoding, create a local `.env` file and add:
-
-```text
-GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
-```
-
 For Vercel, also add a hosted PostgreSQL connection string as `DATABASE_URL`. Without it, Vercel uses temporary storage and accounts may not survive function restarts.
 
 Never commit `.env` or real API keys. The included `.env.example` contains placeholders only.
@@ -32,4 +26,4 @@ Run the TypeScript check with `npm run lint`.
 - In-person, virtual, and hybrid study coordination
 - Private chat, time polls, file sharing, and scheduled sessions
 - Small study pods with join requests and capacity limits
-- Campus location discovery for planned in-person sessions
+- Virtual and in-person session location details
