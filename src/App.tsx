@@ -9,6 +9,7 @@ import StudyPodsPanel from './components/StudyPodsPanel';
 import AuthScreen from './components/AuthScreen';
 import DataImportWidget from './components/DataImportWidget';
 import { courseKey } from './courseUtils';
+import { apiUrl } from './api';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, MessagesSquare, CalendarRange, UserCircle, Sparkles, AlertCircle, Check, Users, LogOut } from 'lucide-react';
 
@@ -83,7 +84,7 @@ export default function App() {
       const storedToken = localStorage.getItem('study_buddy_token');
       if (storedToken) {
         try {
-          const res = await fetch('/api/auth/me', {
+          const res = await fetch(apiUrl('/api/auth/me'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token: storedToken })
@@ -225,7 +226,7 @@ export default function App() {
 
     const loadRegisteredStudents = async () => {
       try {
-        const response = await fetch('/api/students', {
+        const response = await fetch(apiUrl('/api/students'), {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!response.ok) return;
@@ -252,7 +253,7 @@ export default function App() {
     const loadChats = async () => {
       const loadedChats = await Promise.all(matchedIds.map(async buddyId => {
         try {
-          const response = await fetch(`/api/chats/${buddyId}`, {
+          const response = await fetch(apiUrl(`/api/chats/${buddyId}`), {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (!response.ok) return null;
@@ -279,7 +280,7 @@ export default function App() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('/api/matches', { headers: { Authorization: `Bearer ${token}` } })
+    fetch(apiUrl('/api/matches'), { headers: { Authorization: `Bearer ${token}` } })
       .then(response => response.ok ? response.json() : null)
       .then(data => {
         if (Array.isArray(data?.matchedIds)) setMatchedIds(previous => Array.from(new Set([...previous, ...data.matchedIds])));
@@ -398,7 +399,7 @@ export default function App() {
     
     setMatchedIds(prev => [...prev, buddy.id]);
     if (token) {
-      fetch(`/api/matches/${buddy.id}`, {
+      fetch(apiUrl(`/api/matches/${buddy.id}`), {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       }).catch(error => console.error('Failed to save shared match', error));
@@ -451,7 +452,7 @@ export default function App() {
     });
 
     if (token) {
-      fetch(`/api/chats/${buddyId}`, {
+      fetch(apiUrl(`/api/chats/${buddyId}`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(newMsg)
@@ -683,7 +684,7 @@ export default function App() {
     setUserProfile(updatedProfile);
     if (token) {
       try {
-        const response = await fetch('/api/auth/profile', {
+        const response = await fetch(apiUrl('/api/auth/profile'), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify(updatedProfile)

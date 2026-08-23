@@ -10,6 +10,14 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use((req, res, next) => {
+  const allowedOrigin = process.env.FRONTEND_URL || '*';
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 // Vercel's app directory is read-only, so use /tmp unless a database or file path is configured.
 const defaultUsersFile = process.env.VERCEL

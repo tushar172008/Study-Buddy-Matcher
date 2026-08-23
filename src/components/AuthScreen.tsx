@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { LogIn, UserPlus, GraduationCap, Calendar, Clock, BookOpen, MapPin, User, Sparkles, CheckCircle } from 'lucide-react';
 import { PROGRAM_GROUPS } from '../data';
 import { Student, StudyStyle, LocationPref } from '../types';
+import { apiUrl } from '../api';
 
 interface AuthScreenProps {
   onAuthSuccess: (userProfile: Omit<Student, 'id' | 'avatarSeed' | 'isCurrentlyFree'>, token: string) => void;
@@ -75,7 +76,7 @@ export default function AuthScreen({ onAuthSuccess, showToast }: AuthScreenProps
     };
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(apiUrl(endpoint), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
