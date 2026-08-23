@@ -10,8 +10,8 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Path to the user database file inside the workspace root
-const USERS_FILE = path.join(process.cwd(), 'users_db.json');
+// Use persistent storage in production when USERS_FILE is configured.
+const USERS_FILE = process.env.USERS_FILE || path.join(process.cwd(), 'users_db.json');
 const SESSION_SECRET = process.env.SESSION_SECRET || 'development-only-session-secret';
 
 function hashPassword(password: string) {
@@ -52,6 +52,7 @@ function getAuthenticatedEmail(req: express.Request) {
 // Helper to read users from the database file
 function readUsers() {
   if (!fs.existsSync(USERS_FILE)) {
+    fs.mkdirSync(path.dirname(USERS_FILE), { recursive: true });
     fs.writeFileSync(USERS_FILE, '[]');
     return [];
   }
