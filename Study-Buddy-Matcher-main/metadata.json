@@ -1,0 +1,6 @@
+{
+  "name": "Study Buddy Matcher",
+  "description": "A deliberate and clean platform for students to find, match, and schedule study sessions with peers based on courses, schedules, and study style preferences.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

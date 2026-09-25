@@ -1,0 +1,113 @@
+[
+  {
+    "email": "tushar.v172008@gmail.com",
+    "name": "Tushar Verma",
+    "university": "TIET",
+    "major": "cse",
+    "courses": [
+      "B.E. / B.Tech. Lateral Entry"
+    ],
+    "studyStyle": "Discussion-based",
+    "locationPreference": "In-person",
+    "availability": [
+      "Mon Evening"
+    ],
+    "bio": "whatss upp !!",
+    "password": "e8b8c0c558fa73dca6ce4fe2f151f58a:110f6c304d6772d18292c4f536fdad7e50219e1d78ab4a85987b460a552dbc5e16749c1ef7b0ab64377567c0a3f7584476fafdf890a1e26a12f2725cf1b6881a"
+  },
+  {
+    "email": "ritikkumar2006@gmail.com",
+    "name": "Ritik",
+    "university": "TIET",
+    "major": "Math",
+    "courses": [
+      "B.E. Computer Engineering",
+      "Diploma in Computer Science & Engineering"
+    ],
+    "studyStyle": "Problem Solving",
+    "locationPreference": "In-person",
+    "availability": [
+      "Mon Afternoon",
+      "Wed Evening",
+      "Fri Morning"
+    ],
+    "bio": "HIII",
+    "password": "df089afac92212e9234d1c96d6e324ba:ef7e922975854f196b4f76dbbc36346903ebc773da4676fdc2d320392b000d6d4bbd7a3e48fdf2f3d802f59f66c6ce19d795e266265724365221f0e15ba52ad4"
+  },
+  {
+    "email": "aarav.sharma.demo@example.com",
+    "name": "Aarav Sharma",
+    "university": "TIET",
+    "major": "Computer Engineering",
+    "courses": [
+      "B.E. Computer Engineering",
+      "B.E. Computer Science & Engineering"
+    ],
+    "studyStyle": "Problem Solving",
+    "locationPreference": "Hybrid",
+    "availability": [
+      "Mon Evening",
+      "Wed Evening",
+      "Fri Afternoon"
+    ],
+    "bio": "Building useful things and looking for focused study sessions before exams.",
+    "password": "6700c35c6fe0741f4d1cf5fce3b27d5d:7ded490c14cab032677d316a613a9f50e8c6b0a278aa8b990a54a84bab5bfdf133a2bd56604c1d0970544c2089250bfc28b04e523651e1f6b0eea1a7e30d2bb8"
+  },
+  {
+    "email": "meera.kapoor.demo@example.com",
+    "name": "Meera Kapoor",
+    "university": "TIET",
+    "major": "Mathematics & Computing",
+    "courses": [
+      "Mathematics & Computing",
+      "Data Science & AI"
+    ],
+    "studyStyle": "Discussion-based",
+    "locationPreference": "In-person",
+    "availability": [
+      "Tue Morning",
+      "Thu Afternoon",
+      "Fri Evening"
+    ],
+    "bio": "I enjoy explaining difficult concepts and keeping study groups calm and organized.",
+    "password": "6700c35c6fe0741f4d1cf5fce3b27d5d:7ded490c14cab032677d316a613a9f50e8c6b0a278aa8b990a54a84bab5bfdf133a2bd56604c1d0970544c2089250bfc28b04e523651e1f6b0eea1a7e30d2bb8"
+  },
+  {
+    "email": "kabir.singh.demo@example.com",
+    "name": "Kabir Singh",
+    "university": "TIET",
+    "major": "Electronics & Computer Engineering",
+    "courses": [
+      "B.E. Electronics & Computer Engineering",
+      "B.E. Computer Science & Engineering"
+    ],
+    "studyStyle": "Active Recall",
+    "locationPreference": "Virtual",
+    "availability": [
+      "Mon Afternoon",
+      "Wed Morning",
+      "Sat Evening"
+    ],
+    "bio": "Usually working through problem sets with music on and a clear checklist.",
+    "password": "6700c35c6fe0741f4d1cf5fce3b27d5d:7ded490c14cab032677d316a613a9f50e8c6b0a278aa8b990a54a84bab5bfdf133a2bd56604c1d0970544c2089250bfc28b04e523651e1f6b0eea1a7e30d2bb8"
+  },
+  {
+    "email": "simran.kaur.demo@example.com",
+    "name": "Simran Kaur",
+    "university": "TIET",
+    "major": "B.E. Civil Engineering",
+    "courses": [
+      "B.E. Civil Engineering",
+      "B.E. Mechanical Engineering"
+    ],
+    "studyStyle": "Quiet Focus",
+    "locationPreference": "Hybrid",
+    "availability": [
+      "Tue Evening",
+      "Thu Morning",
+      "Sun Afternoon"
+    ],
+    "bio": "Looking for a steady, low-distraction study routine and friendly accountability.",
+    "password": "6700c35c6fe0741f4d1cf5fce3b27d5d:7ded490c14cab032677d316a613a9f50e8c6b0a278aa8b990a54a84bab5bfdf133a2bd56604c1d0970544c2089250bfc28b04e523651e1f6b0eea1a7e30d2bb8"
+  }
+]

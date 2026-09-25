@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@layer base {
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	html {
+		min-width: 320px;
+	}
+
+	body {
+		margin: 0;
+		min-width: 320px;
+		min-height: 100vh;
+	}
+}
+
+	@keyframes fadeSlideIn {
+		to {
+			opacity: 1;
+			filter: blur(0);
+			transform: translateY(0);
+		}
+	}
+
+html {
+	scroll-behavior: smooth;
+}
+
+::selection {
+	background: #f0abfc;
+	color: #28203c;
+}
