@@ -2,6 +2,7 @@ node_modules/
 build/
 dist/
 coverage/
+Study-Buddy-Matcher-main/
 .DS_Store
 *.log
 .env*
