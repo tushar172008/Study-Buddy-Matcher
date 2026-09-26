@@ -7,3 +7,4 @@ Study-Buddy-Matcher-main/
 *.log
 .env*
 !.env.example
+users_db.json
